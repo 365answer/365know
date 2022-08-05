@@ -3,7 +3,7 @@ title: IMX6ULL_PRO开发板使用步骤
 tags: [开发板]
 ---
 
-# [IMX6ULL] IMX6ULL_PRO 开发板使用步骤
+# IMX6ULL_PRO 开发板使用步骤
 
 
 

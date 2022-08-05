@@ -1,6 +1,6 @@
 ---
-title: windows自带的截图方式
-tags: [工具, windows, 截图]
+title: Windows自带的截图方式
+tags: [工具, Windows, 截图]
 ---
 
 # windows自带的截图方式
