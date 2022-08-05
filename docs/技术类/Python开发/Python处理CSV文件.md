@@ -1,0 +1,180 @@
+﻿---
+title: Python处理CSV文件
+tags: [Python, CSV]
+---
+
+在前几年，如果你和嵌入式开发人员推荐 Python，大概会是这样一种场景：
+
+A：”诶，老王，你看Python开发这么方便，以后会不会用到嵌入式设备？“
+
+B：“别做梦了，那玩意儿速度贼慢，肯定满足不了性能要求......”
+
+但近几年，随着半导体行业的迅猛发展，嵌入式处理器的性能有了很大幅度的提高。与此同时，Python 语言本身也在不断优化。因此，在嵌入式领域引入 Python 已经成为了必然趋势。
+
+今天，作者就来总结一下使用 Python 处理物联网行业中一种常见的文件格式：csv文件。
+
+
+
+## Python库：csv
+
+Python中集成了专用于处理csv文件的库，名为：`csv`。
+
+csv 库中有4个常用的对象：
+
+- `csv.reader`：以列表的形式返回读取的数据。
+- `csv.writer`：以列表的形式写入数据。
+- `csv.DictReader`：以字典的形式返回读取的数据。
+- `csv.DictWriter`：以字典的形式写入数据。
+
+
+
+## 读取csv文件
+
+假设现在要读取的csv文件内容如下：
+
+![在这里插入图片描述](Python处理CSV文件.assets/a054f41882ed41328680f8c1d69adf39.png)
+
+可以看到，该文件的第一行表明数据类型，我们暂且称之为`header`。从第2行开始，保存的是设备采集到的数据。
+
+
+
+### 使用`csv.reader`读取数据
+
+```python
+# 导入 csv 库
+import csv
+
+# 以读方式打开文件
+with open("data.csv", mode="r", encoding="utf-8-sig") as f:
+    
+    # 基于打开的文件，创建csv.reader实例
+    reader = csv.reader(f)
+
+    # 获取第一行的header
+    # header[0] = "设备编号"
+    # header[1] = "温度"
+    # header[2] = "湿度"
+    # header[3] = "转速"
+    header = next(reader)
+
+    # 逐行获取数据，并输出
+    for row in reader:
+        print("{}{}: {}={}, {}={}, {}={}".format(header[0], row[0],
+                                                 header[1], row[1],
+                                                 header[2], row[2],
+                                                 header[3], row[3]))
+```
+
+程序运行结果如下：
+
+```text
+设备编号0: 温度=31, 湿度=20, 转速=1000
+设备编号1: 温度=30, 湿度=22, 转速=998
+设备编号2: 温度=32, 湿度=23, 转速=1005
+```
+
+
+
+### 使用`csv.DictReader`读取数据
+
+```python
+# 导入 csv 库
+import csv
+
+# 打开文件
+with open("data.csv", encoding="utf-8-sig", mode="r") as f:
+
+    # 基于打开的文件，创建csv.DictReader实例
+    reader = csv.DictReader(f)
+
+    # 输出信息
+    for row in reader:
+        print("设备编号{}: 温度={}, 湿度={}, 转速={}".format(row["设备编号"],
+                                                   row["温度"],
+                                                   row["湿度"],
+                                                   row["转速"]))
+```
+
+程序运行结果如下：
+
+```text
+设备编号0: 温度=31, 湿度=20, 转速=1000
+设备编号1: 温度=30, 湿度=22, 转速=998
+设备编号2: 温度=32, 湿度=23, 转速=1005
+```
+
+
+
+## 写入csv文件
+
+假设我们现在要创建一个csv文件，将数据保存为如下形式：
+
+![在这里插入图片描述](Python处理CSV文件.assets/a7f6ebc2519c424db8fc1a45623bb257.png)
+
+
+### 使用`csv.writer`写入数据
+
+```python
+# 导入 csv 库
+import csv
+
+# 创建列表，保存header内容
+header_list = ["设备编号", "温度", "湿度", "转速"]
+
+# 创建列表，保存数据
+data_list = [
+    [0, 31, 20, 1000],
+    [1, 30, 22, 998],
+    [2, 32, 33, 1005]
+]
+
+# 以写方式打开文件。注意添加 newline=""，否则会在两行数据之间都插入一行空白。
+with open("new_data.csv", mode="w", encoding="utf-8-sig", newline="") as f:
+    
+    # 基于打开的文件，创建 csv.writer 实例
+    writer = csv.writer(f)
+
+    # 写入 header。
+    # writerow() 一次只能写入一行。
+    writer.writerow(header_list)
+
+    # 写入数据。
+    # writerows() 一次写入多行。
+    writer.writerows(data_list)
+```
+
+
+
+### 使用`csv.DictWriter`写入数据
+
+```python
+# 导入 csv 库
+import csv
+
+# 创建 header 列表
+header_list = ["设备编号", "温度", "湿度", "转速"]
+
+# 创建数据列表，列表的每个元素都是字典
+data_list = [
+    {"设备编号": "0", "温度": 31, "湿度": 20, "转速": 1000},
+    {"设备编号": "1", "温度": 30, "湿度": 22, "转速": 998},
+    {"设备编号": "2", "温度": 32, "湿度": 23, "转速": 1005},
+]
+
+# 以写方式打开文件。注意添加 newline=""，否则会在两行数据之间都插入一行空白。
+with open("new_data.csv", mode="w", encoding="utf-8-sig", newline="") as f:
+    
+    # 基于打开的文件，创建 csv.DictWriter 实例，将 header 列表作为参数传入。
+    writer = csv.DictWriter(f, header_list)
+
+    # 写入 header
+    writer.writeheader()
+
+    # 写入数据
+    writer.writerows(data_list)
+```
+
+关于写入，需要注意：
+
+- 在打开文件时，需要添加`newline = ""`。否则，会在每2行有效内容之间添加一行空白。
+- 如果要保存的内容有中文，而且之后需要用Excel打开文件，那么需要选用`utf-8-sig`编码。如果使用`utf-8`编码，会导致使用Excel查看文件时中文乱码。
