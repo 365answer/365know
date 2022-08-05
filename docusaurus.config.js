@@ -116,6 +116,10 @@ const config = {
                 label: 'GitHub',
                 href: 'https://github.com/365know',
               },
+              {
+                label: 'CSDN',
+                href: 'https://blog.csdn.net/bryanwang_3099?type=blog',
+              },
             ],
           },
         ],
