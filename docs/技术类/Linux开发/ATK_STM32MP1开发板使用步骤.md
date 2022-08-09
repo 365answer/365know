@@ -273,7 +273,7 @@ sudo apt-get install device-tree-compiler bison flex lzop libssl-dev u-boot-tool
 
 
 
-### 4.3.2 uboot
+#### 4.3.2 uboot
 
 修改 uboot 的 Makefile 文件，添加 ARCH 和 CROSS_COMPILE 配置：
 
@@ -296,7 +296,7 @@ make V=1 DEVICE_TREE=stm32mp157d-atk all
 
 
 
-### 4.3.3 linux
+#### 4.3.3 linux
 
 在 linux 内核源码目录下，编写编译脚本 run_build.sh，简化执行：
 
