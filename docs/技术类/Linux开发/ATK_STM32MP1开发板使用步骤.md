@@ -320,3 +320,187 @@ chmod 777 run_build.sh
 ./run_build.sh
 ```
 
+
+
+
+
+## 5. Uboot 网络加载
+
+
+
+### 5.1 Uboot 网络配置
+
+- 配置 uboot 开发板 IP
+
+  ```bash
+  setenv ipaddr 192.168.100.187
+  ```
+
+- 配置开发板 MAC 地址
+
+  ```bash
+  setenv ethaddr b8:ae:1d:01:01:00
+  ```
+
+- 配置 Gateway
+
+  ```bash
+  setenv gatewayip 192.168.100.1
+  ```
+
+- 配置掩码
+
+  ```bash
+  setenv netmask 255.255.255.0
+  ```
+
+- 配置服务器 IP
+
+  ```bash
+  setenv serverip 192.168.100.185
+  ```
+
+- 保存配置
+
+  ```bash
+  saveenv
+  ```
+
+- 测试网络
+
+  ```bash
+  ping 192.168.100.185
+  ```
+
+  
+
+### 5.2 主机网络服务搭建
+
+
+
+#### 5.2.1 TFTP 服务
+
+- 安装服务
+
+  ```bash
+  sudo apt-get install -y tftp-hpa tftpd-hpa xinetd
+  ```
+
+- 创建 TFTP 文件夹
+
+  ```bash
+  mkdir ~/tftpboot && chmod 777 ~/tftpboot
+  ```
+
+- 创建配置文件 /etc/xinetd.d/tftp （如果没有 /etc/xinetd.d 目录就自己创建）
+
+  ```bash
+  server tftp
+  {
+  	socket_type  = dgram
+  	protocol     = udp
+  	wait         = yes
+  	user         = root
+  	server       = /usr/sbin/in.tftpd
+  	server_args  = -s /home/bryan/tftpboot/
+  	disable      = no
+  	per_source   = 11
+  	cps          = 100 2
+  	flags        = IPv4
+  }
+  ```
+
+- 启动 TFTP 服务
+
+  ```bash
+  sudo service tftpd-hpa start
+  ```
+
+- 打开 /etc/default/tftpd-hpa 文件，将其修改为如下所示内容：
+
+  ```bash
+  # /etc/default/tftpd-hpa
+  
+  TFTP_USERNAME="tftp"
+  TFTP_DIRECTORY="/home/bryan/tftpboot"
+  TFTP_ADDRESS=":69"
+  TFTP_OPTIONS="-l -c -s"
+  ```
+
+- 重启 TFTP 服务
+
+  ```bash
+  sudo service tftpd-hpa restart
+  ```
+
+
+
+#### 5.2.2 NFS 服务
+
+- 安装服务
+
+  ```bash
+  sudo apt-get install nfs-kernel-server rpcbind
+  ```
+
+- 创建目录
+
+  ```bash
+  mkdir ~/nfs
+  ```
+
+- 更改 /etc/exports 文件，在文件末尾添加：
+
+  ```bash
+  /home/bryan/nfs *(rw,sync,no_root_squash)
+  ```
+
+- 重启服务
+
+  ```bash
+  sudo /etc/init.d/nfs-kernel-server restart
+  ```
+
+- 本机验证
+
+  ```bahs
+  sudo mount -t nfs -o nolock,vers=3 localhost:/home/bryan/nfs /mnt
+  ```
+  
+
+
+
+### 5.3 文件准备
+
+- 将内核文件（uImage）、设备树文件（stm32mp157d-atk.dtb）放到 ~/tftpboot 目录下。
+- 将文件系统（akt-image-qt5.12.9-rootfs.tar.bz2）解压到 ~/nfs 目录下。
+
+
+
+### 5.4 Uboot 启动变量配置
+
+- bootcmd
+
+  ```bash
+  setenv bootcmd 'tftp c2000000 uImage;tftp c4000000 stm32mp157d-atk.dtb;bootm c2000000 - c4000000'
+  ```
+
+- bootargs
+
+  ```bash
+  setenv bootargs 'console=ttySTM0,115200 root=/dev/nfs nfsroot=192.168.100.185:/home/bryan/nfs/rootfs,proto=tcp rw ip=192.168.100.187:192.168.100.185:192.168.100.1:255.255.255.0::eth0:off'
+  ```
+
+- 保存
+
+  ```bash
+  saveenv
+  ```
+
+- 启动
+
+  ```bash
+  boot
+  ```
+
+  
