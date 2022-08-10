@@ -491,6 +491,12 @@ chmod 777 run_build.sh
   setenv bootargs 'console=ttySTM0,115200 root=/dev/nfs nfsroot=192.168.100.185:/home/bryan/nfs/rootfs,proto=tcp rw ip=192.168.100.187:192.168.100.185:192.168.100.1:255.255.255.0::eth0:off'
   ```
 
+  ```bash
+  setenv bootargs 'console=ttySTM0,115200 root=/dev/nfs nfsroot=${serverip}:/home/bryan/nfs/rootfs,proto=tcp rw ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}::eth0:off'
+  ```
+
+  
+
 - 保存
 
   ```bash
