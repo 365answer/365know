@@ -468,7 +468,27 @@ chmod 777 run_build.sh
   ```
   
 
+- 修改 NFS 版本（大坑）
 
+  Ubuntu 的 NFS 默认只支持 3 和 4 版本，uboot 默认使用的是版本 2，所以直接需要修改 Ubuntu 的 NFS 配置，否则会出现如下错误，导致无法挂载：
+
+  ```bash
+  [  112.489406] VFS: Unable to mount root fs via NFS, trying floppy.
+  ```
+
+  修改方法很简单，只需要在 Ubuntu 系统 /etc/default/nfs-kernel-server 文件的最后添加：
+
+  ```bash
+  RPCNFSDOPTS="--nfs-version 2,3,4 --debug --syslog"
+  ```
+
+  保存后重启 NFS 服务：
+
+  ```bash
+  sudo /etc/init.d/nfs-kernel-server restart
+  ```
+
+  
 
 ### 5.3 文件准备
 
@@ -490,12 +510,6 @@ chmod 777 run_build.sh
   ```bash
   setenv bootargs 'console=ttySTM0,115200 root=/dev/nfs nfsroot=192.168.100.185:/home/bryan/nfs/rootfs,proto=tcp rw ip=192.168.100.187:192.168.100.185:192.168.100.1:255.255.255.0::eth0:off'
   ```
-
-  ```bash
-  setenv bootargs 'console=ttySTM0,115200 root=/dev/nfs nfsroot=${serverip}:/home/bryan/nfs/rootfs,proto=tcp rw ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}::eth0:off'
-  ```
-
-  
 
 - 保存
 
