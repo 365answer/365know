@@ -5,7 +5,7 @@ tags: [系统]
 
 ## 1. 系统安装
 
-[制作UbuntuU盘启动 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/197908477#:~:text=准备一个8G左右的U盘，然后使用UltraISO软件（下载地址： cn.ultraiso.net%2Fxiazai. ，可以免费使用，足够了），制作U盘启动器。,右击箭头所指的地方，然后找到ubuntu18.04的下载位置，选择，然后打开 可以看到如下的界面： 然后右击上面的启动，选择写入硬盘映像。)
+[制作UbuntuU盘启动 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/197908477)
 
 
 
