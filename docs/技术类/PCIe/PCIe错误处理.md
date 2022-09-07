@@ -247,13 +247,66 @@ TLP Digest 非常重要，如果在传输过程中 TD 发生改变，那接收�
 
 ECRC 的值是基于 TLP 中的 Header 和 Data Payload 部分计算出来的，所以这两个部分的值在传输过程中不应该发生改变，但是现实是 Header 中 Type 部分的 bit 0 和 EP 位都有可能发生改变。
 
-首先是 Type 部分
+首先是 Type 部分的 bit 0：对于配置请求（Configuration Request），在到达该请求的目标设备所在的总线之前，它的 Type 部分的 bit 0 的值是 1，到达目标设备所在的总线之后，其值变为 0。
+
+其次是 EP 位：在传输过程中，如果某个设备发现传输的数据包有错误，那么他就会将该数据包的 EP 位设置为 1。通过修改 EP 位可以告知接收设备其收到的数据包存在错误。
+
+因为 Header 中 Type 部分的 bit 0 和 EP 位在传输过程中可能会发生改变，所以将其称之为 variant bits，而且不能被用于生成 ECRC 值。在生成 ECRC 或者使用 ECRC 进行校验的时候，无论 Header 中 Type 部分的 bit 0 和 EP 位的实际值是多少，我们都把他们当做 1。这样，ECRC 的生成和校验都不会收到 Type 部分的 bit 0 和 EP 位改变的影响。
+
+ECRC 校验出错的时候，我们可以根据出错的数据包是 Request 还是 Completion，采取不同的应对策略：
+
+- Request 的 ECRC 校验出错：Completers（接收到 request 的设备）如果发现接收到的 Request 有 ECRC 错误，必须将 ECRC error status 位设置为 1。与此同时，它们也可以不对该 request 返回 completion，这样就会触发 request 发送设备的 completion timeout，发送设备的软件可以重新把 request 发送一次。
+- Completion 的 ECRC 校验出错：requester（发送 request 的设备）发现收到的 completion 中有 ECRC 错误后，必须将 ECRC error   status 位设置为 1。除了标准的错误报告机制之外，requester 还可以选择通过设备特定的中断将该错误报告给软件（需要 requester 的硬件支持），然后软件重新发送 request。
+
+无论 ECRC 错误出现在 request 还是 completion，都可以给系统发送一个 Uncorrectable Non‐fatal error Message，然后驱动软件通过查询 Uncorrectable Error Status Register 获取更多错误相关信息。
+
+
+
+#### Data Poisoning
+
+Data poisoning，也被称为 Error Forwarding，提供了一种标记当前 TLP 存在错误的方法。当设备发现某个 TLP 中的数据存在错误时，就把这个 TLP 的 EP 位设置为 1，这样，所有接收到这个 TLP 的设备都能知道当前这个 TLP 的数据有错误，从而做出对应的处理。
+
+![image-20220906145508715](PCIe错误处理.assets/image-20220906145508715.png)
+
+注意，data poisoning 机制的作用对象是 TLP 中所包含的数据，而不是 TLP 的 header 部分。除了 Memory、Configuration、I/O writes 和 completion 这种可以携带数据的 TLP 类型之外，其他类型的 TLP 都不能使用 data poisoning 机制。如果设备接收到的 TLP 中 EP 位被设置为 1，但这个 TLP 却不包含数据，那么该设备可能会做出预料之外的未定义操作。
+
+通过设置配置空间的 Command register 的 Parity Error Response 位，可以使能 data poisoning 功能。
+
+接收到 EP 位为 1 的 TLP 之后，可以通过 error message 告知系统。如果有 AER，那么也会配置 AER 中对应的 Poisoned TLP status 位。
 
 
 
 ## 错误的报告方式
 
+PCIe 支持的错误报告方式有以下几种：
 
+- Completions — Completion Status reports errors back to the Requester
+- Poisoned Packet — reports bad data in a TLP to the receiver
+- Error Message — reports errors to the host (software)
+
+
+
+### Error Message
+
+PCIe 消除了 PCI 协议中使用的边带信号，使用 Error Message 的方式代替。相对于`PERR#`和`SERR#`信号，Error Message 可以提供更多的错误信息。
+
+Error Message 的格式如下：
+
+![image-20220906164303579](PCIe错误处理.assets/image-20220906164303579.png)
+
+需要注意的是，Error Message 最终都是发送到 Root Complex 进行处理的。Message Code 表明了错类型，有三种可取值：
+
+ ![image-20220906164433821](PCIe错误处理.assets/image-20220906164433821.png)
+
+
+
+#### Advisory Non-Fatal Errors
+
+
+
+
+
+#### Advisory Non-Fatal Cases
 
 
 
